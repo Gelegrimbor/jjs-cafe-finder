@@ -1,7 +1,7 @@
-# API Keys and Secrets
+# API Keys and Secrets (local development only)
 config.js
 
-# Node modules (if you add them later)
+# Node modules
 node_modules/
 
 # OS files

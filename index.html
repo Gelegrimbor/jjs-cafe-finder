@@ -13,20 +13,39 @@
         <div id="results"></div>
     </div>
 
-    <!-- Load config first (contains API key) -->
-    <script src="config.js"></script>
-    
-    <!-- Load Google Maps API dynamically using the config -->
+    <!-- Load config (tries config.js first for local, then config.prod.js for production) -->
     <script>
-        // Create the Google Maps script element dynamically
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&v=weekly`;
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
+        (function() {
+            // Try to load local config first
+            const localScript = document.createElement('script');
+            localScript.src = 'config.js';
+            
+            localScript.onerror = function() {
+                // If local config doesn't exist, load production config
+                console.log('Loading production config...');
+                const prodScript = document.createElement('script');
+                prodScript.src = 'config.prod.js';
+                prodScript.onload = loadGoogleMaps;
+                document.head.appendChild(prodScript);
+            };
+            
+            localScript.onload = function() {
+                console.log('Loading local config...');
+                loadGoogleMaps();
+            };
+            
+            document.head.appendChild(localScript);
+            
+            function loadGoogleMaps() {
+                const mapsScript = document.createElement('script');
+                mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&v=weekly`;
+                mapsScript.async = true;
+                mapsScript.defer = true;
+                document.head.appendChild(mapsScript);
+            }
+        })();
     </script>
     
-    <!-- Load your app script -->
     <script src="cafe-app.js"></script>
 </body>
 </html>
