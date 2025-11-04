@@ -220,10 +220,12 @@ function addSearchControl() {
         btn.textContent = '⏳ Getting your location...';
         btn.disabled = true;
         
+        console.log('===== REQUESTING LOCATION =====');
+        
         // Request high accuracy location
         navigator.geolocation.getCurrentPosition(
             async (position) => {
-                console.log('===== YOUR LOCATION =====');
+                console.log('===== LOCATION FOUND =====');
                 console.log('Latitude:', position.coords.latitude);
                 console.log('Longitude:', position.coords.longitude);
                 console.log('Accuracy:', position.coords.accuracy, 'meters');
@@ -233,6 +235,8 @@ function addSearchControl() {
                     lng: position.coords.longitude
                 };
                 
+                console.log('Setting map center to:', userLocation);
+                
                 map.setCenter(userLocation);
                 map.setZoom(15);
                 await searchCafes(userLocation);
@@ -241,15 +245,17 @@ function addSearchControl() {
                 btn.disabled = false;
             },
             (error) => {
-                console.error('Location error:', error);
+                console.error('===== LOCATION ERROR =====');
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
                 
                 let errorMsg = 'Could not get your location. ';
                 if (error.code === 1) {
-                    errorMsg += 'Please allow location access in your browser settings.';
+                    errorMsg += 'Please allow location access.';
                 } else if (error.code === 2) {
-                    errorMsg += 'Location information is unavailable.';
+                    errorMsg += 'Location unavailable.';
                 } else if (error.code === 3) {
-                    errorMsg += 'Location request timed out.';
+                    errorMsg += 'Request timed out.';
                 }
                 
                 alert(errorMsg);
@@ -257,7 +263,7 @@ function addSearchControl() {
                 btn.disabled = false;
             },
             {
-                enableHighAccuracy: true,  // Use GPS if available
+                enableHighAccuracy: true,  // Use GPS, not IP location
                 timeout: 10000,            // 10 second timeout
                 maximumAge: 0              // Don't use cached location
             }
