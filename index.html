@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Finder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>☕ Cafe Finder</h1>
+        <div id="map"></div>
+        <div id="results"></div>
+    </div>
+
+    <!-- Load config first (contains API key) -->
+    <script src="config.js"></script>
+    
+    <!-- Load Google Maps API dynamically using the config -->
+    <script>
+        // Create the Google Maps script element dynamically
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    </script>
+    
+    <!-- Load your app script -->
+    <script src="cafe-app.js"></script>
+</body>
+</html>
