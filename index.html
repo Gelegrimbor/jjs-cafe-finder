@@ -1,41 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cafe Finder</title>
+
+    <!-- Primary Meta Tags -->
+    <title>Cafe Finder - Discover Nearby Cafes | Coffee Shop Locator</title>
+    <meta name="title" content="Cafe Finder - Discover Nearby Cafes">
+    <meta name="description"
+        content="Find the best cafes near you with real-time location tracking, ratings, and reviews. Discover coffee shops within 3km of your location.">
+    <meta name="keywords" content="cafe finder, coffee shop, nearby cafes, coffee locator, find cafes">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jjs-cafe-finder.vercel.app/">
+    <meta property="og:title" content="Cafe Finder - Discover Nearby Cafes">
+    <meta property="og:description"
+        content="Find the best cafes near you with real-time location tracking and ratings.">
+
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
-        <h1>☕ Cafe Finder</h1>
+        <header class="header">
+            <h1>☕ Cafe Finder</h1>
+            <p class="tagline">Discover the best cafes near you</p>
+        </header>
         <div id="map"></div>
         <div id="results"></div>
     </div>
 
     <!-- Load config (tries config.js first for local, then config.prod.js for production) -->
     <script>
-        (function() {
-            // Try to load local config first
+        (function () {
             const localScript = document.createElement('script');
             localScript.src = 'config.js';
-            
-            localScript.onerror = function() {
-                // If local config doesn't exist, load production config
+
+            localScript.onerror = function () {
                 console.log('Loading production config...');
                 const prodScript = document.createElement('script');
                 prodScript.src = 'config.prod.js';
                 prodScript.onload = loadGoogleMaps;
                 document.head.appendChild(prodScript);
             };
-            
-            localScript.onload = function() {
+
+            localScript.onload = function () {
                 console.log('Loading local config...');
                 loadGoogleMaps();
             };
-            
+
             document.head.appendChild(localScript);
-            
+
             function loadGoogleMaps() {
                 const mapsScript = document.createElement('script');
                 mapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap&v=weekly`;
@@ -45,7 +68,8 @@
             }
         })();
     </script>
-    
+
     <script src="cafe-app.js"></script>
 </body>
+
 </html>

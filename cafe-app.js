@@ -4,18 +4,18 @@ let markers = [];
 
 async function initMap() {
     console.log('===== CAFE FINDER STARTING =====');
-    
+
     const kl = { lat: 3.1390, lng: 101.6869 };
-    
+
     map = new google.maps.Map(document.getElementById('map'), {
         center: kl,
         zoom: 14
     });
-    
+
     console.log('===== MAP CREATED =====');
-    
+
     infowindow = new google.maps.InfoWindow();
-    
+
     await searchCafes(kl);
     addSearchControl();
 }
@@ -23,9 +23,28 @@ async function initMap() {
 async function searchCafes(location) {
     console.log('===== SEARCHING FOR CAFES =====');
     console.log('Location:', location);
-    
+
     clearMarkers();
-    
+
+    const resultsDiv = document.getElementById('results');
+    resultsDiv.innerHTML = `
+    <div class="loading">
+        <h3>🔍 Searching for cafes...</h3>
+        <p>Finding the best coffee spots near you</p>
+    </div>
+`;
+
+    if (!results || results.length === 0) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+        <div class="empty-state">
+            <h3>😔 No cafes found</h3>
+            <p>Try searching in a different area or increase the search radius</p>
+        </div>
+    `;
+        return;
+    }
+
     new google.maps.Marker({
         position: location,
         map: map,
@@ -34,12 +53,12 @@ async function searchCafes(location) {
             scaledSize: new google.maps.Size(50, 50)
         }
     });
-    
+
     try {
         const { places } = await google.maps.importLibrary("places");
-        
+
         console.log('===== LIBRARY LOADED =====');
-        
+
         // Search for cafes with keyword filter
         const request = {
             location: location,
@@ -47,68 +66,68 @@ async function searchCafes(location) {
             type: 'cafe',
             keyword: 'coffee cafe' // This helps filter results
         };
-        
+
         console.log('===== CREATING PLACES SERVICE =====');
-        
+
         const service = new google.maps.places.PlacesService(map);
-        
+
         console.log('===== CALLING NEARBY SEARCH =====');
-        
+
         service.nearbySearch(request, (results, status) => {
             console.log('===== API CALLBACK RECEIVED =====');
             console.log('Status:', status);
             console.log('Raw Results:', results);
-            
+
             if (status === google.maps.places.PlacesServiceStatus.OK && results) {
                 // Filter out non-cafe places
                 const filteredResults = results.filter(place => {
                     const name = place.name.toLowerCase();
                     const types = place.types || [];
-                    
+
                     // Exclude these keywords
                     const excludeKeywords = [
                         'petrol', 'gas', 'station', 'shell', 'petronas', 'caltex',
                         'nasi', 'restoran', 'restaurant', 'mamak', 'kandar',
                         'hotel', 'inn', 'lodge', 'motel',
-                        'bank', 'atm', 'pharmacy', 'clinic','hospital',
-    'laundry', 'workshop', 'kedai', 'pasar', 'market'
+                        'bank', 'atm', 'pharmacy', 'clinic', 'hospital',
+                        'laundry', 'workshop', 'kedai', 'pasar', 'market'
                     ];
-                    
+
                     // Check if name contains excluded keywords
-                    const hasExcludedKeyword = excludeKeywords.some(keyword => 
+                    const hasExcludedKeyword = excludeKeywords.some(keyword =>
                         name.includes(keyword)
                     );
-                    
+
                     if (hasExcludedKeyword) {
                         console.log('Filtered out:', place.name);
                         return false;
                     }
-                    
+
                     // Include these keywords (positive filter)
                     const includeKeywords = [
                         'cafe', 'coffee', 'kopi', 'espresso', 'cappuccino',
                         'latte', 'barista', 'brew', 'bean', 'roast'
                     ];
-                    
-                    const hasIncludedKeyword = includeKeywords.some(keyword => 
+
+                    const hasIncludedKeyword = includeKeywords.some(keyword =>
                         name.includes(keyword)
                     );
-                    
+
                     // Include if it has cafe in types OR has coffee-related keywords in name
                     const isCafe = types.includes('cafe') || hasIncludedKeyword;
-                    
+
                     return isCafe;
                 });
-                
+
                 console.log('===== FILTERED TO', filteredResults.length, 'ACTUAL CAFES =====');
-                
+
                 if (filteredResults.length === 0) {
                     alert('No cafes found nearby. Try a different location.');
                     return;
                 }
-                
+
                 displayResults(filteredResults);
-                
+
                 for (let i = 0; i < filteredResults.length; i++) {
                     createMarker(filteredResults[i], i);
                 }
@@ -117,7 +136,7 @@ async function searchCafes(location) {
                 alert('No cafes found or error: ' + status);
             }
         });
-        
+
     } catch (error) {
         console.error('===== ERROR =====', error);
         alert('Error: ' + error.message);
@@ -126,14 +145,14 @@ async function searchCafes(location) {
 
 function createMarker(place, index) {
     console.log('Creating marker', index + 1, ':', place.name);
-    
+
     const position = place.geometry?.location;
-    
+
     if (!position) {
         console.warn('No position for place');
         return;
     }
-    
+
     const marker = new google.maps.Marker({
         map: map,
         position: position,
@@ -149,12 +168,12 @@ function createMarker(place, index) {
             fontWeight: 'bold'
         }
     });
-    
+
     markers.push(marker);
-    
+
     marker.addListener('click', () => {
         const rating = place.rating ? `⭐ ${place.rating}` : 'No rating';
-        
+
         infowindow.setContent(`
             <div style="padding: 10px;">
                 <h3 style="margin: 0 0 5px 0;">${place.name || 'Cafe'}</h3>
@@ -168,35 +187,42 @@ function createMarker(place, index) {
 
 function displayResults(places) {
     const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = `<h2>☕ Found ${places.length} cafes</h2>`;
-    
-    for (let i = 0; i < places.length; i++) {
-        const place = places[i];
-        const rating = place.rating ? `⭐ ${place.rating}` : 'No rating';
-        
+    resultsDiv.innerHTML = `
+        <h2>☕ Found ${places.length} cafes nearby</h2>
+        <p style="color: #666; margin-bottom: 20px; text-align: center;">Click on any cafe to view it on the map</p>
+        <div class="results-grid"></div>
+    `;
+
+    const grid = resultsDiv.querySelector('.results-grid');
+
+    places.forEach((place, index) => {
+        const rating = place.rating ? `${place.rating}` : 'No rating';
+        const reviews = place.user_ratings_total ? `(${place.user_ratings_total} reviews)` : '';
+        const address = place.vicinity || 'Address not available';
+
         const card = document.createElement('div');
         card.className = 'place-card';
         card.innerHTML = `
             <h3>
-                <span style="background: #ff6b6b; color: white; padding: 2px 8px; border-radius: 50%; margin-right: 8px; font-size: 12px;">
-                    ${i + 1}
-                </span>
-                ${place.name || 'Cafe'}
+                <span class="place-number">${index + 1}</span>
+                <span>${place.name || 'Cafe'}</span>
             </h3>
-            <p style="color: #666; font-size: 14px;">${place.vicinity || ''}</p>
-            <p style="font-weight: bold;">${rating}</p>
+            <p class="place-rating">
+                ⭐ ${rating} <span style="font-weight: normal; color: #888;">${reviews}</span>
+            </p>
+            <p class="place-address">📍 ${address}</p>
         `;
-        
+
         card.onclick = () => {
             map.setCenter(place.geometry.location);
             map.setZoom(17);
-            if (markers[i]) {
-                google.maps.event.trigger(markers[i], 'click');
+            if (markers[index]) {
+                google.maps.event.trigger(markers[index], 'click');
             }
         };
-        
-        resultsDiv.appendChild(card);
-    }
+
+        grid.appendChild(card);
+    });
 }
 
 function clearMarkers() {
@@ -210,18 +236,18 @@ function addSearchControl() {
     const btn = document.createElement('button');
     btn.textContent = '📍 Find Cafes Near Me';
     btn.className = 'search-btn';
-    
+
     btn.onclick = () => {
         if (!navigator.geolocation) {
             alert('Geolocation is not supported by your browser');
             return;
         }
-        
+
         btn.textContent = '⏳ Getting your location...';
         btn.disabled = true;
-        
+
         console.log('===== REQUESTING LOCATION =====');
-        
+
         // Request high accuracy location
         navigator.geolocation.getCurrentPosition(
             async (position) => {
@@ -229,18 +255,18 @@ function addSearchControl() {
                 console.log('Latitude:', position.coords.latitude);
                 console.log('Longitude:', position.coords.longitude);
                 console.log('Accuracy:', position.coords.accuracy, 'meters');
-                
+
                 const userLocation = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
                 };
-                
+
                 console.log('Setting map center to:', userLocation);
-                
+
                 map.setCenter(userLocation);
                 map.setZoom(15);
                 await searchCafes(userLocation);
-                
+
                 btn.textContent = '📍 Find Cafes Near Me';
                 btn.disabled = false;
             },
@@ -248,7 +274,7 @@ function addSearchControl() {
                 console.error('===== LOCATION ERROR =====');
                 console.error('Error code:', error.code);
                 console.error('Error message:', error.message);
-                
+
                 let errorMsg = 'Could not get your location. ';
                 if (error.code === 1) {
                     errorMsg += 'Please allow location access.';
@@ -257,7 +283,7 @@ function addSearchControl() {
                 } else if (error.code === 3) {
                     errorMsg += 'Request timed out.';
                 }
-                
+
                 alert(errorMsg);
                 btn.textContent = '📍 Find Cafes Near Me';
                 btn.disabled = false;
@@ -269,7 +295,7 @@ function addSearchControl() {
             }
         );
     };
-    
+
     document.querySelector('.container').insertBefore(btn, document.getElementById('map'));
 }
 
