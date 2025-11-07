@@ -214,11 +214,22 @@ function displayResults(places) {
         `;
 
         card.onclick = () => {
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);
-            if (markers[index]) {
-                google.maps.event.trigger(markers[index], 'click');
+            // Scroll to map (on mobile, keep current position on desktop)
+            if (window.innerWidth < 768) {
+                document.getElementById('map').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
+
+            // Center map and show marker (with delay on mobile for smooth UX)
+            setTimeout(() => {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
+                if (markers[index]) {
+                    google.maps.event.trigger(markers[index], 'click');
+                }
+            }, window.innerWidth < 768 ? 400 : 0);
         };
 
         grid.appendChild(card);
